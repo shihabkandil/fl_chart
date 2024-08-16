@@ -1149,17 +1149,64 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
         ..strokeWidth = tooltipData.tooltipBorder.width;
     }
 
-    canvasWrapper.drawRotated(
-      size: rect.size,
-      rotationOffset: rectRotationOffset,
-      drawOffset: rectDrawOffset,
-      angle: rotateAngle,
-      drawCallback: () {
-        canvasWrapper
-          ..drawRRect(roundedRect, _bgTouchTooltipPaint)
-          ..drawRRect(roundedRect, _borderTouchTooltipPaint);
-      },
-    );
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(rect.left + radius.x, rect.top)
+      ..arcToPoint(
+        Offset(rect.left, rect.top + radius.y),
+        radius: radius,
+        clockwise: false,
+      )
+
+      /// Left side
+      ..lineTo(rect.left, rect.bottom - radius.y)
+
+      /// Bottom-left corner
+
+      ..arcToPoint(
+        Offset(rect.left + radius.x, rect.bottom),
+        radius: radius,
+        clockwise: false,
+      )
+
+      /// Draw the left part of the bottom side (leaving a gap in the center for the triangle)
+      ..lineTo(mostTopOffset.dx - 8, rect.bottom)
+
+      /// Draw the triangle (pointer)
+      ..lineTo(mostTopOffset.dx, rect.bottom + 8)
+      ..lineTo(mostTopOffset.dx + 8, rect.bottom)
+
+      /// Draw the right part of the bottom side
+      ..lineTo(rect.right - radius.x, rect.bottom)
+      ..arcToPoint(
+        Offset(rect.right, rect.bottom - radius.y),
+        radius: radius,
+        clockwise: false,
+      )
+      ..lineTo(rect.right, rect.top + radius.y)
+
+      /// Top-right corner
+      ..arcToPoint(
+        Offset(rect.right - radius.x, rect.top),
+        radius: radius,
+        clockwise: false,
+      )
+
+      /// Top side
+      ..lineTo(rect.left + radius.x, rect.top)
+      ..close();
+
+    canvasWrapper.drawPath(path, paint);
+
+    final borderPaint = Paint()
+      ..color = tooltipData.tooltipBorder.color
+      ..strokeWidth = tooltipData.tooltipBorder.width
+      ..style = PaintingStyle.stroke;
+
+    canvasWrapper.drawPath(path, borderPaint);
 
     /// draw the texts one by one in below of each other
     var topPosSeek = tooltipData.tooltipPadding.top;
